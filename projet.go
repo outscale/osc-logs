@@ -33,8 +33,8 @@ func cliLog() cli.Command {
 			}
 
 			for _, log := range resp.GetLogs() {
-				a, _ := json.Marshal(log)
-				fmt.Println(string(a))
+				jsonLog, _ := json.Marshal(log)
+				fmt.Println(string(jsonLog))
 			}
 
 			return 0
