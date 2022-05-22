@@ -10,11 +10,12 @@ import (
 	cli "github.com/teris-io/cli"
 )
 
-func cliLog() cli.Command {
-	return cli.NewCommand("apilog", "Read Api logs").
+func main() {
+
+	app := cli.New("OSC-LOG").
 		WithAction(func(args []string, options map[string]string) int {
 			config := osc.NewConfiguration()
-			config.Debug = true
+			config.Debug = false
 
 			client := osc.NewAPIClient(config)
 
@@ -24,45 +25,28 @@ func cliLog() cli.Command {
 			})
 			req := osc.ReadApiLogsRequest{}
 			resp, httpRes, err := client.ApiLogApi.ReadApiLogs(ctx).ReadApiLogsRequest(req).Execute()
+			var errCode int
+			errCode = 0
 			if err != nil {
 				fmt.Printf("Error %v", err)
 				if httpRes != nil {
 					fmt.Fprintln(os.Stderr, httpRes.Status)
 				}
-				os.Exit(1)
+				errCode = 1
 			}
 
 			for _, log := range resp.GetLogs() {
-				jsonLog, _ := json.Marshal(log)
+				jsonLog, marshalError := json.Marshal(log)
 				fmt.Println(string(jsonLog))
+				if marshalError != nil {
+					fmt.Printf("Marshal Error: %v", marshalError)
+					errCode = 1
+				}
+
 			}
 
-			return 0
+			return errCode
 		})
-}
-
-func LogW() cli.Option {
-	return cli.NewOption("write", "Write the API logs in a file").WithChar('w').WithType(cli.TypeString)
-}
-
-func LogC() cli.Option {
-	return cli.NewOption("count", "exit once <count> logs are written").WithChar('c').WithType(cli.TypeInt)
-}
-
-func LogI() cli.Option {
-	return cli.NewOption("i", "waits a duration defined by <wait> (in seconds) between two calls to Outscale AP ").WithChar('i').WithType(cli.TypeInt)
-}
-
-func LogP() cli.Option {
-	return cli.NewOption("profil", "use a specific profile name ").WithChar('p').WithType(cli.TypeString)
-}
-func LogH() cli.Option {
-	return cli.NewOption("help", "displays help presenting a description of the program, its version, the options available with their description ").WithChar('h').WithType(cli.TypeString)
-}
-
-func main() {
-
-	app := cli.New("OSC-LOG").WithCommand(cliLog()).WithOption(LogW()).WithOption(LogC()).WithOption(LogI()).WithOption(LogP()).WithOption(LogH())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 
