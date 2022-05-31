@@ -3,13 +3,17 @@
 It is a tool allowing users of the 3DS Outscale cloud to easily consult and keep the logs of calls made on the IaaS.
 
 # **Features**
-From the moment the program starts and one or more logs are available, the program displays
-
-it on the standard output (JSON format).
-
+From the moment the program starts and one or more logs are available, the program displays it on the standard output (JSON format).
 Each log will be displayed on a single line in a compact way.
-
 The program can be stopped with ctrl-c.
+
+```
+Description:
+    osc-logs
+
+Options:
+    -w, --write   Write the API logs in a JSON file
+```
 
 # **License**
 Copyright Outscale SAS
