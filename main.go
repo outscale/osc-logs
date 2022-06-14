@@ -26,7 +26,6 @@ func displayLogs(args []string, options map[string]string) int {
 	signal.Notify(stopSignal, syscall.SIGINT)
 	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
 	duration := time.Duration(2) * time.Second
-	tk := time.NewTicker(duration)
 	var file *os.File
 	lineBreak := []byte("\n")
 	logcount := 0
@@ -43,12 +42,26 @@ func displayLogs(args []string, options map[string]string) int {
 	if options["count"] != "" {
 		countValue, err = strconv.Atoi(options["count"])
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error: can not convert into integer  ")
+			fmt.Fprintln(os.Stderr, "Error: cannot convert --count option into integer  ")
 			os.Exit(1)
 		}
 	} else {
 		countValue = -1
 	}
+	if options["interval"] != "" {
+		intervalValue, err := strconv.Atoi(options["interval"])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:cannot convert --interval option to integer ")
+			os.Exit(1)
+		}
+		if intervalValue < 1 {
+			fmt.Fprintln(os.Stderr, "the interval must be greater than 0")
+			os.Exit(1)
+		} else {
+			duration = time.Duration(intervalValue) * time.Second
+		}
+	}
+	tk := time.NewTicker(duration)
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
 			Filters: &osc.FiltersApiLog{
@@ -101,11 +114,15 @@ func AddWriteOption() cli.Option {
 func AddCountOption() cli.Option {
 	return cli.NewOption("count", "Exit after <count> logs").WithChar('c').WithType(cli.TypeInt)
 }
+func AddIntervalOption() cli.Option {
+	return cli.NewOption("interval", "Wait a duration defined by <wait> (in seconds) between two calls to Outscale API ").WithChar('i').WithType(cli.TypeInt)
+}
 func main() {
 	app := cli.New("osc-logs").
 		WithAction(displayLogs).
 		WithOption(AddWriteOption()).
-		WithOption(AddCountOption())
+		WithOption(AddCountOption()).
+		WithOption(AddIntervalOption())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 }
