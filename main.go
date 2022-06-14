@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	osc "github.com/outscale/osc-sdk-go/v2"
+	cli "github.com/teris-io/cli"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	osc "github.com/outscale/osc-sdk-go/v2"
-	cli "github.com/teris-io/cli"
 )
 
 func displayLogs(args []string, options map[string]string) int {
@@ -21,11 +20,22 @@ func displayLogs(args []string, options map[string]string) int {
 		AccessKey: os.Getenv("OSC_ACCESS_KEY"),
 		SecretKey: os.Getenv("OSC_SECRET_KEY"),
 	})
-	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, syscall.SIGINT)
+	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
 	duration := time.Duration(2) * time.Second
 	tk := time.NewTicker(duration)
+	var file *os.File
+	lineBreak := []byte("\n")
+	var err error
+	if options["write"] != "" {
+		file, err = os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error: can not open the file")
+			os.Exit(1)
+		}
+		defer file.Close()
+	}
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
 			Filters: &osc.FiltersApiLog{
@@ -44,29 +54,19 @@ func displayLogs(args []string, options map[string]string) int {
 		if !resp.HasLogs() || len(logs) == 0 {
 			continue
 		}
-		var file *os.File
-		var fileError error
-		lineBreak := []byte("\n")
-		if options["write"] != "" {
-			file, fileError = os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
-			if fileError != nil {
-				fmt.Fprintln(os.Stderr, "Error: can not open the file")
-			}
-			defer file.Close()
 
-		}
 		for _, log := range logs {
 			jsonLog, marshalError := json.Marshal(log)
 			if marshalError != nil {
 				fmt.Fprintf(os.Stderr, "Error: can not read log output")
 				return 1
 			}
-			if file != nil {
+			if file == nil {
+				fmt.Println(string(jsonLog))
+			} else {
 				logWriting := []byte(string(jsonLog))
 				file.Write(logWriting)
 				file.Write(lineBreak)
-			} else {
-				fmt.Println(string(jsonLog))
 			}
 		}
 		lastLog := logs[len(logs)-1]
