@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	osc "github.com/outscale/osc-sdk-go/v2"
-	cli "github.com/teris-io/cli"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
+
+	osc "github.com/outscale/osc-sdk-go/v2"
+	cli "github.com/teris-io/cli"
 )
 
 func displayLogs(args []string, options map[string]string) int {
@@ -27,6 +29,8 @@ func displayLogs(args []string, options map[string]string) int {
 	tk := time.NewTicker(duration)
 	var file *os.File
 	lineBreak := []byte("\n")
+	logcount := 0
+	var countValue int
 	var err error
 	if options["write"] != "" {
 		file, err = os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
@@ -35,6 +39,15 @@ func displayLogs(args []string, options map[string]string) int {
 			os.Exit(1)
 		}
 		defer file.Close()
+	}
+	if options["count"] != "" {
+		countValue, err = strconv.Atoi(options["count"])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error: can not convert into integer  ")
+			os.Exit(1)
+		}
+	} else {
+		countValue = -1
 	}
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
@@ -54,19 +67,22 @@ func displayLogs(args []string, options map[string]string) int {
 		if !resp.HasLogs() || len(logs) == 0 {
 			continue
 		}
-
 		for _, log := range logs {
 			jsonLog, marshalError := json.Marshal(log)
 			if marshalError != nil {
 				fmt.Fprintf(os.Stderr, "Error: can not read log output")
 				return 1
 			}
+			logcount = logcount + 1
 			if file == nil {
 				fmt.Println(string(jsonLog))
 			} else {
 				logWriting := []byte(string(jsonLog))
 				file.Write(logWriting)
 				file.Write(lineBreak)
+			}
+			if logcount == countValue {
+				os.Exit(0)
 			}
 		}
 		lastLog := logs[len(logs)-1]
@@ -78,13 +94,18 @@ func displayLogs(args []string, options map[string]string) int {
 	}
 	return 0
 }
+
 func AddWriteOption() cli.Option {
 	return cli.NewOption("write", "Write all traces inside a file instead of writing to standard output").WithChar('w').WithType(cli.TypeString)
+}
+func AddCountOption() cli.Option {
+	return cli.NewOption("count", "Exit after <count> logs").WithChar('c').WithType(cli.TypeInt)
 }
 func main() {
 	app := cli.New("osc-logs").
 		WithAction(displayLogs).
-		WithOption(AddWriteOption())
+		WithOption(AddWriteOption()).
+		WithOption(AddCountOption())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 }
