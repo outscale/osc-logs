@@ -12,7 +12,8 @@ Description:
     osc-logs
 
 Options:
-    -w, --write   Write the API logs in a JSON file
+    -w, --write   Write all traces inside a file instead of writing to standard output
+    -c, --count   Exit after <count> logs
 ```
 
 # **License**
