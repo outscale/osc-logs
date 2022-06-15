@@ -15,13 +15,6 @@ import (
 )
 
 func displayLogs(args []string, options map[string]string) int {
-	config := osc.NewConfiguration()
-	config.Debug = false
-	client := osc.NewAPIClient(config)
-	ctx := context.WithValue(context.Background(), osc.ContextAWSv4, osc.AWSv4{
-		AccessKey: os.Getenv("OSC_ACCESS_KEY"),
-		SecretKey: os.Getenv("OSC_SECRET_KEY"),
-	})
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, syscall.SIGINT)
 	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
@@ -31,6 +24,15 @@ func displayLogs(args []string, options map[string]string) int {
 	logcount := 0
 	var countValue int
 	var err error
+	var ctx context.Context
+	var client osc.APIClient
+
+	if options["profile"] != "" {
+		_, ctx, client, err = GenerateConfigurationAndContext(options["profile"])
+	} else {
+		_, ctx, client, err = GenerateConfigurationAndContext("default")
+	}
+
 	if options["write"] != "" {
 		file, err = os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
 		if err != nil {
@@ -107,7 +109,6 @@ func displayLogs(args []string, options map[string]string) int {
 	}
 	return 0
 }
-
 func AddWriteOption() cli.Option {
 	return cli.NewOption("write", "Write all traces inside a file instead of writing to standard output").WithChar('w').WithType(cli.TypeString)
 }
@@ -117,12 +118,36 @@ func AddCountOption() cli.Option {
 func AddIntervalOption() cli.Option {
 	return cli.NewOption("interval", "Wait a duration defined by <wait> (in seconds) between two calls to Outscale API ").WithChar('i').WithType(cli.TypeInt)
 }
+func AddProfileOption() cli.Option {
+	return cli.NewOption("profile", "Use a specific profile name (\"default\" is the default profile )").WithChar('p').WithType(cli.TypeString)
+}
+func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, context.Context, osc.APIClient, error) {
+	configFile, err := osc.LoadDefaultConfigFile()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error while loading default configuration file: %s \n", err.Error())
+		os.Exit(1)
+	}
+	config, err := configFile.Configuration(profileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error while creating configuration: %s \n", err.Error())
+		os.Exit(1)
+	}
+	config.Debug = false
+	ctx, err := configFile.Context(context.Background(), profileName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error while creating context: %s \n", err.Error())
+		os.Exit(1)
+	}
+	client := *osc.NewAPIClient(config)
+	return config, ctx, client, err
+}
 func main() {
 	app := cli.New("osc-logs").
 		WithAction(displayLogs).
 		WithOption(AddWriteOption()).
 		WithOption(AddCountOption()).
-		WithOption(AddIntervalOption())
+		WithOption(AddIntervalOption()).
+		WithOption(AddProfileOption())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 }
