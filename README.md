@@ -15,6 +15,7 @@ Options:
     -w, --write      Write all traces inside a file instead of writing to standard output
     -c, --count      Exit after <count> logs
     -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API 
+    -p, --profile    Use a specific profile name ("default" is the default profile )
 ```
 
 # License
