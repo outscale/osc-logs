@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -26,6 +27,7 @@ func displayLogs(args []string, options map[string]string) int {
 	var err error
 	var ctx context.Context
 	var client osc.APIClient
+	var callsToIgnore []string
 
 	if options["profile"] != "" {
 		_, ctx, client, err = GenerateConfigurationAndContext(options["profile"])
@@ -64,6 +66,9 @@ func displayLogs(args []string, options map[string]string) int {
 		}
 	}
 	tk := time.NewTicker(duration)
+	if options["ignore"] != "" {
+		callsToIgnore = strings.Split(options["ignore"], ",")
+	}
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
 			Filters: &osc.FiltersApiLog{
@@ -83,6 +88,9 @@ func displayLogs(args []string, options map[string]string) int {
 			continue
 		}
 		for _, log := range logs {
+			if SearchByCallName(log, callsToIgnore) {
+				continue
+			}
 			jsonLog, marshalError := json.Marshal(log)
 			if marshalError != nil {
 				fmt.Fprintf(os.Stderr, "Error: can not read log output")
@@ -100,6 +108,7 @@ func displayLogs(args []string, options map[string]string) int {
 				os.Exit(0)
 			}
 		}
+
 		lastLog := logs[len(logs)-1]
 		logDate = *lastLog.QueryDate
 		go func() {
@@ -121,6 +130,9 @@ func AddIntervalOption() cli.Option {
 func AddProfileOption() cli.Option {
 	return cli.NewOption("profile", "Use a specific profile name (\"default\" is the default profile )").WithChar('p').WithType(cli.TypeString)
 }
+func AddIgnoreOption() cli.Option {
+	return cli.NewOption("ignore", "ignore specific one or more API calls").WithChar('I').WithType(cli.TypeString)
+}
 func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, context.Context, osc.APIClient, error) {
 	configFile, err := osc.LoadDefaultConfigFile()
 	if err != nil {
@@ -141,13 +153,23 @@ func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, co
 	client := *osc.NewAPIClient(config)
 	return config, ctx, client, err
 }
+func SearchByCallName(log osc.Log, callsToIgnore []string) bool {
+	LogCallName := log.QueryCallName
+	for _, CallName := range callsToIgnore {
+		if *LogCallName == CallName {
+			return true
+		}
+	}
+	return false
+}
 func main() {
 	app := cli.New("osc-logs").
 		WithAction(displayLogs).
 		WithOption(AddWriteOption()).
 		WithOption(AddCountOption()).
 		WithOption(AddIntervalOption()).
-		WithOption(AddProfileOption())
+		WithOption(AddProfileOption()).
+		WithOption(AddIgnoreOption())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 }
