@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: osc-logs
+Upstream-Contact: Outscale support <opensource@outscale.com>
+Source: https://github.com/outscale/osc-logs/
+
+Files: *.md
+Copyright: 2022 Outscale SAS <opensource@outscale.com>
+License: CC-BY-4.0
+
+Files: Makefile *.go *.sum *.mod .gitignore
+Copyright: 2022 Outscale SAS <opensource@outscale.com>
+License: BSD-3-Clause
