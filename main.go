@@ -28,7 +28,6 @@ func displayLogs(args []string, options map[string]string) int {
 	var ctx context.Context
 	var client osc.APIClient
 	var callsToIgnore []string
-
 	if options["profile"] != "" {
 		_, ctx, client, err = GenerateConfigurationAndContext(options["profile"])
 	} else {
@@ -68,6 +67,10 @@ func displayLogs(args []string, options map[string]string) int {
 	tk := time.NewTicker(duration)
 	if options["ignore"] != "" {
 		callsToIgnore = strings.Split(options["ignore"], ",")
+	}
+	if options["version"] == "true" {
+		fmt.Println("osc-logs Version: v0.1.0")
+		os.Exit(0)
 	}
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
@@ -131,7 +134,10 @@ func AddProfileOption() cli.Option {
 	return cli.NewOption("profile", "Use a specific profile name (\"default\" is the default profile )").WithChar('p').WithType(cli.TypeString)
 }
 func AddIgnoreOption() cli.Option {
-	return cli.NewOption("ignore", "ignore specific one or more API calls").WithChar('I').WithType(cli.TypeString)
+	return cli.NewOption("ignore", "Ignore one or more specific API calls. Values are separated by commas e.g. \"--ignore=ReadApiLogs,ReadVms\"").WithChar('I').WithType(cli.TypeString)
+}
+func AddVersionOption() cli.Option {
+	return cli.NewOption("version", "Print osc-logs version to standard output and exit").WithChar('v').WithType(cli.TypeBool)
 }
 func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, context.Context, osc.APIClient, error) {
 	configFile, err := osc.LoadDefaultConfigFile()
@@ -169,7 +175,8 @@ func main() {
 		WithOption(AddCountOption()).
 		WithOption(AddIntervalOption()).
 		WithOption(AddProfileOption()).
-		WithOption(AddIgnoreOption())
+		WithOption(AddIgnoreOption()).
+		WithOption(AddVersionOption())
 	ret := app.Run(os.Args, os.Stdout)
 	os.Exit(ret)
 }

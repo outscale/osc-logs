@@ -20,6 +20,7 @@ Options:
     -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API 
     -p, --profile    Use a specific profile name ("default" is the default profile )
     -I, --ignore     Ignore one or more specific API calls. Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
+    -v, --version    print osc-logs version to standard output and exit
 ```
 
 # Installation
