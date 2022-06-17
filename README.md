@@ -21,7 +21,7 @@ Options:
 
 # Installation
 
-Download latest binary in Release page or run:
+Download latest binary in [Release page](https://github.com/outscale/osc-logs/releases) or run:
 ```
 go install github.com/outscale/osc-logs@latest
 ```
