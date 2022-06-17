@@ -1,11 +1,10 @@
 # osc-logs
 
-It is a tool allowing users of the 3DS Outscale cloud to easily consult and keep the logs of calls made on the IaaS.
+osc-logs download API call logs from Outscale easily consult and keep them.
 
 # Features
-From the moment the program starts and one or more logs are available, the program displays it on the standard output (JSON format).
-Each log will be displayed on a single line in a compact way.
-The program can be stopped with ctrl-c.
+
+By default logs are printed as Line-delimited JSON to standard output.
 
 ```
 Description:
@@ -17,7 +16,28 @@ Options:
     -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API 
     -p, --profile    Use a specific profile name ("default" is the default profile )
     -I, --ignore     Ignore one or more specific API calls. Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
+```
 
+# Installation
+
+Download latest binary in Release page or run:
+```
+go install github.com/outscale/osc-logs@latest
+```
+
+# Configuration
+
+osc-logs reads `~/.osc/config.json` file to get its credentials and region details.
+
+Example of `config.json`:
+```
+{
+    "default": {
+        "access_key": "MyAccessKey",
+        "secret_key": "MySecretKey",
+        "region": "eu-west-2"
+    }
+}
 ```
 
 # License
