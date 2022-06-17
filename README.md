@@ -46,16 +46,16 @@ Example of `config.json`:
 
 # Usage example
 
-Example of storing in a file all logs except ReadApiLogs itself:
+Example of storing all logs in a file  except [ReadApiLogs](https://docs.outscale.com/api#readapilogs) call itself:
 ```
 osc-logs --ignore=ReadApiLogs -w logs.json
 ```
 
 Once logs are recording to `logs.json`, you can separatly work on them.
 
-You can live-view them using `tail -f logs.json` or use more advanced tools like [jq](https://stedolan.github.io/jq/).
+You can live-view them using `tail -f logs.json` or use more advanced tools like [jq](https://stedolan.github.io/jq/) to query json documents.
 
-Example of showing only calls date, name and status code in a tsv format:
+Example of showing only calls date, name and status code with tab-separated values:
 ```
 jq -s -r '(.[] | [.QueryDate, .QueryCallName, .ResponseStatusCode]) | @tsv' logs.json
 2022-06-17T12:14:28.378111Z	ReadVolumes	200
