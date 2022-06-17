@@ -1,9 +1,10 @@
 # osc-logs
 
-osc-logs download API call logs from Outscale easily consult and keep them.
+osc-logs constantly fetch API call logs from Outscale to easily consult and keep them.
 
 # Features
 
+osc-logs fetch API call logs every few seconds and only print logs from program's start date.
 By default logs are printed as Line-delimited JSON to standard output.
 
 ```
