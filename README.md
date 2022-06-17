@@ -8,7 +8,7 @@ osc-logs fetch API call logs every few seconds and only print logs from program'
 
 By default logs are printed as Line-delimited JSON to standard output. See [format documentation](https://docs.outscale.com/api#tocslog) for more details.
 
-We recommand using [jq](https://stedolan.github.io/jq/) utility for additional filtering and formating.
+We recommend using [jq](https://stedolan.github.io/jq/) utility for additional filtering and formating.
 
 ```
 Description:
