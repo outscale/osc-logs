@@ -11,21 +11,22 @@ By default logs are printed as Line-delimited JSON to standard output. See [form
 We recommend using [jq](https://stedolan.github.io/jq/) utility for additional filtering and formating.
 
 ```
-Description:
-    osc-logs
+osc-logs
 
 Options:
     -w, --write      Write all traces inside a file instead of writing to standard output
     -c, --count      Exit after <count> logs
-    -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API 
+    -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API (default: 10)
     -p, --profile    Use a specific profile name ("default" is the default profile )
     -I, --ignore     Ignore one or more specific API calls. Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
-    -v, --version    print osc-logs version to standard output and exit
+    -v, --version    Print version to standard output and exit
 ```
 
 # Installation
 
-Download latest binary in [Release page](https://github.com/outscale/osc-logs/releases) or run:
+Download latest binary in [Release page](https://github.com/outscale/osc-logs/releases).
+
+Alternatively, you can run (or update) osc-logs with this command:
 ```
 go install github.com/outscale/osc-logs@latest
 ```
