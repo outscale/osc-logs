@@ -34,6 +34,7 @@ func displayLogs(args []string, options map[string]string) int {
 	var ctx context.Context
 	var client osc.APIClient
 	var callsToIgnore []string
+	var lastRequestId string
 	if options["profile"] != "" {
 		_, ctx, client, err = GenerateConfigurationAndContext(options["profile"])
 	} else {
@@ -98,6 +99,9 @@ func displayLogs(args []string, options map[string]string) int {
 			continue
 		}
 		for _, log := range logs {
+			if log.GetRequestId() == lastRequestId {
+				continue
+			}
 			if SearchByCallName(log, callsToIgnore) {
 				continue
 			}
@@ -120,6 +124,7 @@ func displayLogs(args []string, options map[string]string) int {
 		}
 
 		lastLog := logs[len(logs)-1]
+		lastRequestId = lastLog.GetRequestId()
 		logDate = *lastLog.QueryDate
 		go func() {
 			<-stopSignal
