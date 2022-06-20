@@ -15,11 +15,16 @@ import (
 	cli "github.com/teris-io/cli"
 )
 
+var (
+	defaultFetchInterval = 10
+	resultsPerPage int32 = 1000
+)
+
 func displayLogs(args []string, options map[string]string) int {
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, syscall.SIGINT)
 	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
-	duration := time.Duration(2) * time.Second
+	duration := time.Duration(defaultFetchInterval) * time.Second
 	var file *os.File
 	lineBreak := []byte("\n")
 	logcount := 0
@@ -77,6 +82,7 @@ func displayLogs(args []string, options map[string]string) int {
 			Filters: &osc.FiltersApiLog{
 				QueryDateAfter: &logDate,
 			},
+			ResultsPerPage: &resultsPerPage,
 		}
 		resp, httpRes, err := client.ApiLogApi.ReadApiLogs(ctx).ReadApiLogsRequest(req).Execute()
 		if err != nil {
@@ -128,7 +134,8 @@ func AddCountOption() cli.Option {
 	return cli.NewOption("count", "Exit after <count> logs").WithChar('c').WithType(cli.TypeInt)
 }
 func AddIntervalOption() cli.Option {
-	return cli.NewOption("interval", "Wait a duration defined by <wait> (in seconds) between two calls to Outscale API ").WithChar('i').WithType(cli.TypeInt)
+	text := fmt.Sprintf("Wait a duration defined by <wait> (in seconds) between two calls to Outscale API (default: %d)", defaultFetchInterval)
+	return cli.NewOption("interval", text).WithChar('i').WithType(cli.TypeInt)
 }
 func AddProfileOption() cli.Option {
 	return cli.NewOption("profile", "Use a specific profile name (\"default\" is the default profile )").WithChar('p').WithType(cli.TypeString)
