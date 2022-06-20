@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	osc "github.com/outscale/osc-sdk-go/v2"
@@ -22,8 +20,6 @@ var (
 )
 
 func displayLogs(args []string, options map[string]string) int {
-	stopSignal := make(chan os.Signal, 1)
-	signal.Notify(stopSignal, syscall.SIGINT)
 	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
 	duration := time.Duration(defaultFetchInterval) * time.Second
 	var file *os.File
@@ -126,10 +122,6 @@ func displayLogs(args []string, options map[string]string) int {
 		lastLog := logs[len(logs)-1]
 		lastRequestId = lastLog.GetRequestId()
 		logDate = *lastLog.QueryDate
-		go func() {
-			<-stopSignal
-			os.Exit(0)
-		}()
 	}
 	return 0
 }
