@@ -18,6 +18,7 @@ import (
 var (
 	defaultFetchInterval = 10
 	resultsPerPage int32 = 1000
+	oscLogsVersion = "v0.1.1"
 )
 
 func displayLogs(args []string, options map[string]string) int {
@@ -74,7 +75,7 @@ func displayLogs(args []string, options map[string]string) int {
 		callsToIgnore = strings.Split(options["ignore"], ",")
 	}
 	if options["version"] == "true" {
-		fmt.Println("osc-logs Version: v0.1.0")
+		fmt.Println(oscLogsVersion)
 		os.Exit(0)
 	}
 	for range tk.C {
@@ -144,7 +145,7 @@ func AddIgnoreOption() cli.Option {
 	return cli.NewOption("ignore", "Ignore one or more specific API calls. Values are separated by commas e.g. \"--ignore=ReadApiLogs,ReadVms\"").WithChar('I').WithType(cli.TypeString)
 }
 func AddVersionOption() cli.Option {
-	return cli.NewOption("version", "Print osc-logs version to standard output and exit").WithChar('v').WithType(cli.TypeBool)
+	return cli.NewOption("version", "Print version to standard output and exit").WithChar('v').WithType(cli.TypeBool)
 }
 func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, context.Context, osc.APIClient, error) {
 	configFile, err := osc.LoadDefaultConfigFile()
