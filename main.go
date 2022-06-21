@@ -84,11 +84,11 @@ func displayLogs(args []string, options map[string]string) int {
 		}
 		resp, httpRes, err := client.ApiLogApi.ReadApiLogs(ctx).ReadApiLogsRequest(req).Execute()
 		if err != nil {
-			fmt.Printf("Error %v", err)
+			fmt.Fprintf(os.Stderr, "Error %v", err)
 			if httpRes != nil {
 				fmt.Fprintln(os.Stderr, httpRes.Status)
 			}
-			return 1
+			continue
 		}
 		logs := resp.GetLogs()
 		if !resp.HasLogs() || len(logs) == 0 {
