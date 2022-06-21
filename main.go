@@ -16,7 +16,7 @@ import (
 var (
 	defaultFetchInterval = 10
 	resultsPerPage int32 = 1000
-	oscLogsVersion = "v0.1.2"
+	oscLogsVersion = "v0.1.3"
 )
 
 func displayLogs(args []string, options map[string]string) int {
