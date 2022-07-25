@@ -1,0 +1,30 @@
+name: osc-logs-CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+
+    - name: osc-logs builds
+      run: go build 
+
+    - name: install jq
+      run: sudo apt-get update -y && sudo apt-get -y install jq
+
+    - name: Integration tests
+      env:
+        OSC_ACCESS_KEY: ${{ secrets.OSC_ACCESS_KEY }}
+        OSC_SECRET_KEY: ${{ secrets.OSC_SECRET_KEY }}
+        OSC_REGION: ${{ secrets.OSC_REGION }}
+      run: ./.github/scripts/tests.sh
