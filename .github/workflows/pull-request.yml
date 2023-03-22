@@ -1,8 +1,11 @@
 name: osc-logs-CI
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  pull_request_target:
+    types:
+      - opened
+    branches:
+      - 'master'
 
 jobs:
 
