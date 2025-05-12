@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -13,115 +15,122 @@ import (
 	cli "github.com/teris-io/cli"
 )
 
-var (
-	defaultFetchInterval = 10
-	resultsPerPage int32 = 1000
-	oscLogsVersion = "v0.1.3"
+const (
+	defaultFetchInterval       = 20 // seconds
+	firstPageSize        int32 = 25
+	nextPageSize         int32 = 1000
+	oscLogsVersion             = "v0.1.4"
 )
 
 func displayLogs(args []string, options map[string]string) int {
-	logDate := time.Now().UTC().Format("2006-01-02T15:04:05")
-	duration := time.Duration(defaultFetchInterval) * time.Second
-	var file *os.File
-	lineBreak := []byte("\n")
-	logcount := 0
-	var countValue int
+	if options["version"] == "true" {
+		fmt.Println(oscLogsVersion)
+		return 0
+	}
+
 	var err error
 	var ctx context.Context
 	var client osc.APIClient
-	var callsToIgnore []string
 	var lastRequestId string
 	if options["profile"] != "" {
 		_, ctx, client, err = GenerateConfigurationAndContext(options["profile"])
 	} else {
 		_, ctx, client, err = GenerateConfigurationAndContext("default")
 	}
-
-	if options["write"] != "" {
-		file, err = os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error: can not open the file")
-			os.Exit(1)
-		}
-		defer file.Close()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: cannot load credentials: %v\n", err)
+		return 1
 	}
+
+	countValue := -1
 	if options["count"] != "" {
 		countValue, err = strconv.Atoi(options["count"])
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error: cannot convert --count option into integer  ")
-			os.Exit(1)
+			fmt.Fprintln(os.Stderr, "Error: cannot convert --count option into integer")
+			return 1
 		}
-	} else {
-		countValue = -1
 	}
+
+	duration := time.Duration(defaultFetchInterval) * time.Second
 	if options["interval"] != "" {
 		intervalValue, err := strconv.Atoi(options["interval"])
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error:cannot convert --interval option to integer ")
-			os.Exit(1)
+			fmt.Fprintln(os.Stderr, "Error: cannot convert --interval option to integer")
+			return 1
 		}
 		if intervalValue < 1 {
 			fmt.Fprintln(os.Stderr, "the interval must be greater than 0")
-			os.Exit(1)
+			return 1
 		} else {
 			duration = time.Duration(intervalValue) * time.Second
 		}
 	}
-	tk := time.NewTicker(duration)
+
+	callsToIgnore := []string{"ReadApiLogs"}
 	if options["ignore"] != "" {
 		callsToIgnore = strings.Split(options["ignore"], ",")
 	}
-	if options["version"] == "true" {
-		fmt.Println(oscLogsVersion)
-		os.Exit(0)
+
+	var output io.Writer
+	if options["write"] != "" {
+		file, err := os.OpenFile(options["write"], os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: cannot open output file: %v\n", err)
+			return 1
+		}
+		defer file.Close()
+		output = file
+	} else {
+		output = os.Stdout
 	}
+	jsonOut := json.NewEncoder(output)
+	tk := time.NewTicker(duration)
+	var logDate *string
+	logcount := 0
+	pageSize := firstPageSize
 	for range tk.C {
 		req := osc.ReadApiLogsRequest{
 			Filters: &osc.FiltersApiLog{
-				QueryDateAfter: &logDate,
+				QueryDateAfter: logDate,
 			},
-			ResultsPerPage: &resultsPerPage,
+			ResultsPerPage: &pageSize,
 		}
-		resp, httpRes, err := client.ApiLogApi.ReadApiLogs(ctx).ReadApiLogsRequest(req).Execute()
+		resp, _, err := client.ApiLogApi.ReadApiLogs(ctx).ReadApiLogsRequest(req).Execute()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error %v", err)
-			if httpRes != nil {
-				fmt.Fprintln(os.Stderr, httpRes.Status)
-			}
+			fmt.Fprintf(os.Stderr, "Error %v\n", err)
 			continue
 		}
 		logs := resp.GetLogs()
-		if !resp.HasLogs() || len(logs) == 0 {
+		if len(logs) == 0 || (len(logs) == 1 && logs[0].GetRequestId() == lastRequestId) {
+			fmt.Print(".")
 			continue
 		}
-		for _, log := range logs {
+		for _, log := range slices.Backward(logs) {
 			if log.GetRequestId() == lastRequestId {
 				continue
 			}
-			if SearchByCallName(log, callsToIgnore) {
+			if slices.Contains(callsToIgnore, log.GetQueryCallName()) {
 				continue
 			}
-			jsonLog, marshalError := json.Marshal(log)
-			if marshalError != nil {
-				fmt.Fprintf(os.Stderr, "Error: can not read log output")
+			_, err := fmt.Fprintln(output)
+			if err == nil {
+				err = jsonOut.Encode(log)
+			}
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Cannot write log: %v\n", err)
 				return 1
 			}
-			logcount = logcount + 1
-			if file == nil {
-				fmt.Println(string(jsonLog))
-			} else {
-				logWriting := []byte(string(jsonLog))
-				file.Write(logWriting)
-				file.Write(lineBreak)
-			}
+			logcount++
 			if logcount == countValue {
-				os.Exit(0)
+				return 0
 			}
 		}
 
-		lastLog := logs[len(logs)-1]
+		// logs sorted by time, most recent first
+		lastLog := logs[0]
 		lastRequestId = lastLog.GetRequestId()
-		logDate = *lastLog.QueryDate
+		logDate = lastLog.QueryDate
+		pageSize = nextPageSize
 	}
 	return 0
 }
@@ -145,34 +154,24 @@ func AddVersionOption() cli.Option {
 	return cli.NewOption("version", "Print version to standard output and exit").WithChar('v').WithType(cli.TypeBool)
 }
 func GenerateConfigurationAndContext(profileName string) (*osc.Configuration, context.Context, osc.APIClient, error) {
+	ctx := context.Background()
 	configFile, err := osc.LoadDefaultConfigFile()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error while loading default configuration file: %s \n", err.Error())
-		os.Exit(1)
+		return nil, ctx, osc.APIClient{}, err
 	}
 	config, err := configFile.Configuration(profileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error while creating configuration: %s \n", err.Error())
-		os.Exit(1)
+		return nil, ctx, osc.APIClient{}, err
 	}
 	config.Debug = false
-	ctx, err := configFile.Context(context.Background(), profileName)
+	ctx, err = configFile.Context(ctx, profileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error while creating context: %s \n", err.Error())
-		os.Exit(1)
+		return nil, ctx, osc.APIClient{}, err
 	}
 	client := *osc.NewAPIClient(config)
 	return config, ctx, client, err
 }
-func SearchByCallName(log osc.Log, callsToIgnore []string) bool {
-	LogCallName := log.QueryCallName
-	for _, CallName := range callsToIgnore {
-		if *LogCallName == CallName {
-			return true
-		}
-	}
-	return false
-}
+
 func main() {
 	app := cli.New("osc-logs").
 		WithAction(displayLogs).
