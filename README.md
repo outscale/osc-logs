@@ -19,8 +19,8 @@ Options:
     -w, --write      Write all traces inside a file instead of writing to standard output
     -c, --count      Exit after <count> logs
     -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API (default: 10)
-    -p, --profile    Use a specific profile name ("default" is the default profile )
-    -I, --ignore     Ignore one or more specific API calls. Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
+    -p, --profile    Use a specific profile name (default: "default")
+    -I, --ignore     Ignore one or more specific API calls (default: ReadApiLogs). Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
     -v, --version    Print version to standard output and exit
 ```
 
@@ -52,7 +52,7 @@ Example of `config.json`:
 
 Example of storing all logs in a file  except [ReadApiLogs](https://docs.outscale.com/api#readapilogs) call itself:
 ```
-osc-logs --ignore=ReadApiLogs -w logs.json
+osc-logs -w logs.json
 ```
 
 Once logs are recording to `logs.json`, you can separatly work on them.
