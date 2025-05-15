@@ -24,7 +24,7 @@ archives:
     format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
-      - LICENSE
+      - LICENSES/*
       - README.md
       - osc-logs
 
@@ -32,7 +32,7 @@ archives:
     format: zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
-      - LICENSE
+      - LICENSES/*
       - README.md
       - osc-logs.exe
 
