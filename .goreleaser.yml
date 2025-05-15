@@ -1,6 +1,5 @@
-# .goreleaser.yml
-
 project_name: osc-logs
+
 builds:
   - id: default
     main: .
@@ -9,12 +8,9 @@ builds:
       - windows
       - darwin
     goarch:
-      - 386
       - amd64
       - arm64
     ignore:
-      - goos: darwin
-        goarch: 386
       - goos: windows
         goarch: arm64
     ldflags:
@@ -33,8 +29,6 @@ archives:
 
   - format: zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      windows: win
     files:
       - LICENSE
       - README.md
@@ -48,4 +42,4 @@ release:
   prerelease: false
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
