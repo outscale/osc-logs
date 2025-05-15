@@ -1,75 +1,147 @@
-[![Project Incubating](https://docs.outscale.com/fr/userguide/_images/Project-Incubating-blue.svg)](https://docs.outscale.com/en/userguide/Open-Source-Projects.html)
-
 # osc-logs
 
-osc-logs constantly fetch API call logs from Outscale to easily consult and keep them.
+[![Project Incubating](https://docs.outscale.com/fr/userguide/_images/Project-Incubating-blue.svg)](https://docs.outscale.com/en/userguide/Open-Source-Projects.html)
 
-# Features
+<p align="center">
+  <img alt="Logs Icon" src="https://img.icons8.com/ios-filled/100/console.png" width="100px">
+</p>
 
-osc-logs fetch API call logs every few seconds and only print logs from program's start date.
+---
 
-By default logs are printed as Line-delimited JSON to standard output. See [format documentation](https://docs.outscale.com/api#tocslog) for more details.
+## 🌐 Links
 
-We recommend using [jq](https://stedolan.github.io/jq/) utility for additional filtering and formating.
+* API Reference: [Outscale API Logs](https://docs.outscale.com/api#tocslog)
+* Releases: [https://github.com/outscale/osc-logs/releases](https://github.com/outscale/osc-logs/releases)
+* jq Utility: [https://stedolan.github.io/jq/](https://stedolan.github.io/jq/)
 
-```
-osc-logs
+---
 
-Options:
-    -w, --write      Write all traces inside a file instead of writing to standard output
-    -c, --count      Exit after <count> logs
-    -i, --interval   Wait a duration defined by <wait> (in seconds) between two calls to Outscale API (default: 10)
-    -p, --profile    Use a specific profile name (default: "default")
-    -I, --ignore     Ignore one or more specific API calls (default: ReadApiLogs). Values are separated by commas e.g. "--ignore=ReadApiLogs,ReadVms"
-    -v, --version    Print version to standard output and exit
-```
+## 📄 Table of Contents
 
-# Installation
+* [Overview](#-overview)
+* [Requirements](#-requirements)
+* [Installation](#-installation)
+* [Configuration](#-configuration)
+* [Usage](#-usage)
+* [Examples](#-examples)
+* [License](#-license)
+* [Contributing](#-contributing)
 
-Download latest binary in [Release page](https://github.com/outscale/osc-logs/releases).
+---
 
-Alternatively, you can run (or update) osc-logs with this command:
-```
+## 🧭 Overview
+
+**osc-logs** is a lightweight command-line utility that continuously fetches and prints API call logs from your OUTSCALE account.
+
+By default, logs are displayed as line-delimited JSON to standard output, starting from the program’s execution time.
+
+---
+
+## ✅ Requirements
+
+* Go 1.20+ (only for manual build)
+* OUTSCALE credentials configured in `~/.osc/config.json`
+* Internet access to query the OUTSCALE API
+
+---
+
+## ⚙️ Installation
+
+### Option 1: Download Binary
+
+Download the latest release for your platform from the [GitHub Releases page](https://github.com/outscale/osc-logs/releases).
+
+### Option 2: Install via `go install`
+
+```bash
 go install github.com/outscale/osc-logs@latest
 ```
 
-# Configuration
+---
 
-osc-logs reads `~/.osc/config.json` file to get its credentials and region details.
+## 🛠 Configuration
 
-Example of `config.json`:
+The tool uses the following file to authenticate:
+
 ```
+~/.osc/config.json
+```
+
+### Example `config.json`
+
+```json
 {
-    "default": {
-        "access_key": "MyAccessKey",
-        "secret_key": "MySecretKey",
-        "region": "eu-west-2"
-    }
+  "default": {
+    "access_key": "MyAccessKey",
+    "secret_key": "MySecretKey",
+    "region": "eu-west-2"
+  }
 }
 ```
 
-# Usage example
+---
 
-Example of storing all logs in a file  except [ReadApiLogs](https://docs.outscale.com/api#readapilogs) call itself:
+## 🚀 Usage
+
+```bash
+osc-logs [OPTIONS]
 ```
+
+### Options
+
+| Option           | Description                                           |
+| ---------------- | ----------------------------------------------------- |
+| `-w, --write`    | Write all traces to a file instead of stdout          |
+| `-c, --count`    | Exit after `<count>` logs                             |
+| `-i, --interval` | Wait `<wait>` seconds between API calls (default: 10) |
+| `-p, --profile`  | Use a specific config profile (default: "default")    |
+| `-I, --ignore`   | Ignore specific API calls (comma-separated)           |
+| `-v, --version`  | Print version and exit                                |
+
+> Ignored calls default to `ReadApiLogs`. Example: `--ignore=ReadApiLogs,ReadVms`
+
+---
+
+## 💡 Examples
+
+### Write all logs to a file
+
+```bash
 osc-logs -w logs.json
 ```
 
-Once logs are recording to `logs.json`, you can separatly work on them.
+### View logs in real-time
 
-You can live-view them using `tail -f logs.json` or use more advanced tools like [jq](https://stedolan.github.io/jq/) to query json documents.
-
-Example of showing only calls date, name and status code with tab-separated values:
+```bash
+tail -f logs.json
 ```
+
+### Filter and format using `jq`
+
+Show only date, operation name, and status code in TSV format:
+
+```bash
 jq -s -r '(.[] | [.QueryDate, .QueryCallName, .ResponseStatusCode]) | @tsv' logs.json
-2022-06-17T12:14:28.378111Z	ReadVolumes	200
+```
+
+Sample output:
+
+```
 2022-06-17T12:14:28.378111Z	ReadVolumes	200
 2022-06-17T12:14:30.379899Z	CreateVms	200
 ```
 
-# License
+---
 
-> Copyright Outscale SAS
-> BSD-3-Clause
+## 📜 License
 
-Check [CONTRIBUTING.md](CONTRIBUTING.md) for more details about license testing.
+**osc-logs** is released under the BSD 3-Clause License.
+© 2024 Outscale SAS
+
+See [LICENSE](./LICENSE) for details.
+
+---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute or run tests.
