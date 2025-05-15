@@ -39,7 +39,7 @@ By default, logs are displayed as line-delimited JSON to standard output, starti
 
 ## ✅ Requirements
 
-* Go 1.20+ (only for manual build)
+* Go 1.23+ (only for manual build)
 * OUTSCALE credentials configured in `~/.osc/config.json`
 * Internet access to query the OUTSCALE API
 
