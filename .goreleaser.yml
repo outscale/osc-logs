@@ -26,7 +26,6 @@ archives:
     files:
       - LICENSES/*
       - README.md
-      - osc-logs
 
   - id: zip
     format: zip
@@ -34,7 +33,6 @@ archives:
     files:
       - LICENSES/*
       - README.md
-      - osc-logs.exe
 
 release:
   github:
