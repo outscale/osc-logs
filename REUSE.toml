@@ -6,11 +6,11 @@ SPDX-PackageDownloadLocation = "https://github.com/outscale/osc-logs/"
 [[annotations]]
 path = "**.md"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2022 Outscale SAS <opensource@outscale.com>"
+SPDX-FileCopyrightText = "2026 Outscale SAS <opensource@outscale.com>"
 SPDX-License-Identifier = "CC-BY-4.0"
 
 [[annotations]]
 path = ["Makefile", "**.go", "**.sum", "**.mod", ".gitignore"]
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2022 Outscale SAS <opensource@outscale.com>"
+SPDX-FileCopyrightText = "2026 Outscale SAS <opensource@outscale.com>"
 SPDX-License-Identifier = "BSD-3-Clause"
