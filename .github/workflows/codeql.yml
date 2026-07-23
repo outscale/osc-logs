@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Outscale <opensource@outscale.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 name: "CodeQL"
 
 on:
