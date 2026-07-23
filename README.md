@@ -7,6 +7,12 @@
 </p>
 
 ---
+>
+>
+> [!WARNING]
+> This project is currently being integrated into the [`octl`](https://github.com/outscale/octl). As a result, `osc-logs` may soon be deprecated and will no longer receive active development. We recommend using `octl` for new integrations when the equivalent functionality becomes available.
+>
+>
 
 ## 🌐 Links
 
