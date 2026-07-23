@@ -1,4 +1,9 @@
 #!/bin/env bash
+
+# SPDX-FileCopyrightText: 2026 Outscale <opensource@outscale.com>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 set -eu
 
 mkdir ~/.osc
